@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    # environment:
+    #   DATABASE_CLIENT: postgres
+    #   DATABASE_HOST: postgres
+    #   DATABASE_PORT: 5432
+    #   DATABASE_NAME: randomcooking
+    #   DATABASE_USERNAME: root
+    #   DATABASE_PASSWORD: password
+    command: "go run server.go" # ソースコードを変更してもこの設定では反映されないため、都度コンテナをbuildしなければならない
+    volumes:
+      - type: bind
+        source: ./backend
+        target: /app
+    ports:
+      - 8080:8080
+
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: randomcooking
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./docker/data:/var/lib/postgresql/data
+      - ./docker/postgres/sql:/docker-entrypoint-initdb.d
