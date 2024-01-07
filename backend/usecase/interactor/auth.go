@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -26,8 +25,8 @@ type lineAuthResponse struct {
 	Iss     string   `json:"iss"`
 	Sub     string   `json:"sub"`
 	Aud     string   `json:"aud"`
-	Exp     int64    `json:"exp,string"`
-	Iat     int64    `json:"iat,string"`
+	Exp     int64    `json:"exp"`
+	Iat     int64    `json:"iat"`
 	Nonce   string   `json:"nonce"`
 	Amr     []string `json:"amr"`
 	Name    string   `json:"name"`
@@ -43,6 +42,7 @@ func (u *AuthUseCase) Login(code string) (string, error) {
 		"https://api.line.me/oauth2/v2.1/verify",
 		strings.NewReader(values.Encode()),
 	)
+
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -92,7 +92,7 @@ func getJWT(name, uid string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ss, err := token.SignedString(mySigningKey)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return ""
 	}
 	return ss

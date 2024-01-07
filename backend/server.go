@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	_ "github.com/lib/pq"
 
 	"log"
@@ -11,6 +13,7 @@ import (
 	usecase "github.com/laut0104/RandomCooking/usecase/interactor"
 
 	"github.com/joho/godotenv"
+	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -50,16 +53,19 @@ func main() {
 	menuHandler := handler.NewMenuHandler(menuUC)
 	lineHandler := handler.NewLineHandler(lineUC)
 
-	// ルートを設定
-	e.GET("/user/:id", userHandler.GetUserByID)
-	e.GET("/user", userHandler.GetUserByLineUserID)
-	e.GET("/menu/:uid/:id", menuHandler.GetMenu)
-	e.GET("/menus/:uid", menuHandler.GetMenusByUserID)
-	e.POST("/menu/:uid", menuHandler.AddMenu)
-	e.PUT("/menu/:uid/:id", menuHandler.UpdateMenu)
-	e.DELETE("/menu/:uid/:id", menuHandler.DeleteMenu)
 	e.POST("/callback", lineHandler.LineEvent)
 	e.GET("/auth/line/callback", authHandler.Login)
+
+	// ルートを設定
+	r := e.Group("/api")
+	r.Use(echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY"))))
+	r.GET("/user/:id", userHandler.GetUserByID)
+	r.GET("/user", userHandler.GetUserByLineUserID)
+	r.GET("/menu/:uid/:id", menuHandler.GetMenu)
+	r.GET("/menus/:uid", menuHandler.GetMenusByUserID)
+	r.POST("/menu/:uid", menuHandler.AddMenu)
+	r.PUT("/menu/:uid/:id", menuHandler.UpdateMenu)
+	r.DELETE("/menu/:uid/:id", menuHandler.DeleteMenu)
 
 	// サーバーをポート番号8080で起動
 	e.Logger.Fatal(e.Start(":8080"))
