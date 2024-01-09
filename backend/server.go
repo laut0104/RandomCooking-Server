@@ -48,15 +48,17 @@ func main() {
 	userUC := usecase.NewUserUseCase(userRepo)
 	menuUC := usecase.NewMenuUseCase(menuRepo)
 	lineUC := usecase.NewLineUseCase(userRepo)
+	storageUC := usecase.NewStorageUseCase()
 	authHandler := handler.NewAuthHandler(authUC)
 	userHandler := handler.NewUserHandler(userUC)
 	menuHandler := handler.NewMenuHandler(menuUC)
 	lineHandler := handler.NewLineHandler(lineUC)
+	storageHandler := handler.NewStorageHandler(storageUC)
 
 	e.POST("/callback", lineHandler.LineEvent)
 	e.GET("/auth/line/callback", authHandler.Login)
 
-	// ルートを設定
+	// ログインしているユーザーでなければアクセスできない
 	r := e.Group("/api")
 	r.Use(echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY"))))
 	r.GET("/user/:id", userHandler.GetUserByID)
@@ -66,6 +68,7 @@ func main() {
 	r.POST("/menu/:uid", menuHandler.AddMenu)
 	r.PUT("/menu/:uid/:id", menuHandler.UpdateMenu)
 	r.DELETE("/menu/:uid/:id", menuHandler.DeleteMenu)
+	r.POST("/image/:uid", storageHandler.UploadImage)
 
 	// サーバーをポート番号8080で起動
 	e.Logger.Fatal(e.Start(":8080"))
