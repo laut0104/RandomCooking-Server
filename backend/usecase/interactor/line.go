@@ -49,3 +49,28 @@ func (u *LineUseCase) UnFollow(lineUserID string) error {
 	}
 	return nil
 }
+
+func (u *LineUseCase) CreateRichMenu(richMenu linebot.RichMenu, lineBot *linebot.Client) (string, error) {
+	res, err := lineBot.CreateRichMenu(richMenu).Do()
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	return res.RichMenuID, nil
+}
+
+func (u *LineUseCase) SetRichMenuImage(lineBot *linebot.Client, richMenuId string, filePath string) error {
+	if _, err := lineBot.UploadRichMenuImage(richMenuId, filePath).Do(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *LineUseCase) SetDefaultRichMenu(lineBot *linebot.Client, richMenuId string) error {
+	if _, err := lineBot.SetDefaultRichMenu(richMenuId).Do(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
