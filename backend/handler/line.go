@@ -59,6 +59,41 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 				}
 				return err
 			}
+			richMenu := &linebot.RichMenu{
+				Size:        linebot.RichMenuSize{Width: 2500, Height: 1686},
+				Selected:    false,
+				Name:        "richmenu-demo",
+				ChatBarText: "Tap here",
+				Areas: []linebot.AreaDetail{
+					{
+						Bounds: linebot.RichMenuBounds{X: 132, Y: 130, Width: 1054, Height: 1425},
+						Action: linebot.RichMenuAction{
+							Type: "uri",
+							URI:  "https://liff.line.me/1660690567-wegZZboy/menu-list",
+						},
+					},
+					{
+						Bounds: linebot.RichMenuBounds{X: 1315, Y: 130, Width: 1054, Height: 1425},
+						Action: linebot.RichMenuAction{
+							Type: "message",
+							Text: "Hello1",
+						},
+					},
+				},
+			}
+			richMenuID, err := h.lineUC.CreateRichMenu(*richMenu, bot)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+			if err = h.lineUC.SetRichMenuImage(bot, richMenuID, os.Getenv("RICHMENU_IMG")); err != nil {
+				log.Println(err)
+				return err
+			}
+			if err = h.lineUC.SetDefaultRichMenu(bot, richMenuID); err != nil {
+				log.Println(err)
+				return err
+			}
 			log.Println("Add user success =====")
 
 		// Unfollow
