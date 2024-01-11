@@ -10,15 +10,19 @@ import (
 
 type LineUseCase struct {
 	userRepo repository.User
+	lineBot  *linebot.Client
 }
 
-func NewLineUseCase(userRepo repository.User) *LineUseCase {
-	return &LineUseCase{userRepo: userRepo}
+func NewLineUseCase(userRepo repository.User, lineBot *linebot.Client) *LineUseCase {
+	return &LineUseCase{
+		userRepo: userRepo,
+		lineBot:  lineBot,
+	}
 }
 
-func (u *LineUseCase) Follow(lineUserID string, lineBot *linebot.Client) error {
+func (u *LineUseCase) Follow(lineUserID string) error {
 	log.Println("test==========")
-	profile, err := lineBot.GetProfile(lineUserID).Do()
+	profile, err := u.lineBot.GetProfile(lineUserID).Do()
 	if err != nil {
 		log.Println(err)
 		return err
@@ -50,8 +54,8 @@ func (u *LineUseCase) UnFollow(lineUserID string) error {
 	return nil
 }
 
-func (u *LineUseCase) CreateRichMenu(richMenu linebot.RichMenu, lineBot *linebot.Client) (string, error) {
-	res, err := lineBot.CreateRichMenu(richMenu).Do()
+func (u *LineUseCase) CreateRichMenu(richMenu linebot.RichMenu) (string, error) {
+	res, err := u.lineBot.CreateRichMenu(richMenu).Do()
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -59,16 +63,60 @@ func (u *LineUseCase) CreateRichMenu(richMenu linebot.RichMenu, lineBot *linebot
 	return res.RichMenuID, nil
 }
 
-func (u *LineUseCase) SetRichMenuImage(lineBot *linebot.Client, richMenuId string, filePath string) error {
-	if _, err := lineBot.UploadRichMenuImage(richMenuId, filePath).Do(); err != nil {
+func (u *LineUseCase) SetRichMenuImage(richMenuId string, filePath string) error {
+	if _, err := u.lineBot.UploadRichMenuImage(richMenuId, filePath).Do(); err != nil {
 		log.Println(err)
 		return err
 	}
 	return nil
 }
 
-func (u *LineUseCase) SetDefaultRichMenu(lineBot *linebot.Client, richMenuId string) error {
-	if _, err := lineBot.SetDefaultRichMenu(richMenuId).Do(); err != nil {
+func (u *LineUseCase) SetDefaultRichMenu(richMenuId string) error {
+	if _, err := u.lineBot.SetDefaultRichMenu(richMenuId).Do(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *LineUseCase) SendFlexMessage(lineUserID string, flexMessage *linebot.FlexMessage) error {
+	if _, err := u.lineBot.PushMessage(
+		lineUserID,
+		flexMessage,
+	).Do(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *LineUseCase) SendMessage(lineUserID string, message *linebot.TextMessage) error {
+	if _, err := u.lineBot.PushMessage(
+		lineUserID,
+		message,
+	).Do(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *LineUseCase) ReplyFlexMessage(replyToken string, flexMessage *linebot.FlexMessage) error {
+	if _, err := u.lineBot.ReplyMessage(
+		replyToken,
+		flexMessage,
+	).Do(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *LineUseCase) ReplyMessage(replyToken string, message *linebot.TextMessage) error {
+	if _, err := u.lineBot.ReplyMessage(
+		replyToken,
+		message,
+	).Do(); err != nil {
 		log.Println(err)
 		return err
 	}

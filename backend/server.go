@@ -4,6 +4,7 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
+	"github.com/line/line-bot-sdk-go/linebot"
 
 	"log"
 
@@ -40,6 +41,15 @@ func main() {
 	}
 	defer db.Close()
 
+	bot, err := linebot.New(
+		os.Getenv("LINE_BOT_CHANNEL_SECRET"),
+		os.Getenv("LINE_BOT_CHANNEL_TOKEN"),
+	)
+	if err != nil {
+		log.Println(err)
+		log.Fatal(err)
+	}
+
 	// TODO: ここら辺の生成周りは後でどっかでまとめたい
 	userRepo := database.NewUserRepository(db)
 	menuRepo := database.NewMenuRepository(db)
@@ -47,13 +57,15 @@ func main() {
 	authUC := usecase.NewAuthUseCase()
 	userUC := usecase.NewUserUseCase(userRepo)
 	menuUC := usecase.NewMenuUseCase(menuRepo)
-	lineUC := usecase.NewLineUseCase(userRepo)
+	lineUC := usecase.NewLineUseCase(userRepo, bot)
+	recommendUC := usecase.NewRecommendUseCase(menuRepo)
 	storageUC := usecase.NewStorageUseCase()
 	authHandler := handler.NewAuthHandler(authUC)
 	userHandler := handler.NewUserHandler(userUC)
 	menuHandler := handler.NewMenuHandler(menuUC)
-	lineHandler := handler.NewLineHandler(lineUC)
+	lineHandler := handler.NewLineHandler(userUC, lineUC, recommendUC)
 	storageHandler := handler.NewStorageHandler(storageUC)
+	recommendHandler := handler.NewRecommendHandler(userUC, recommendUC, lineUC)
 
 	e.POST("/callback", lineHandler.LineEvent)
 	e.GET("/auth/line/callback", authHandler.Login)
@@ -69,6 +81,7 @@ func main() {
 	r.PUT("/menu/:uid/:id", menuHandler.UpdateMenu)
 	r.DELETE("/menu/:uid/:id", menuHandler.DeleteMenu)
 	r.POST("/image/:uid", storageHandler.UploadImage)
+	r.POST("/recommend/menu/:uid", recommendHandler.RecommendMenu)
 
 	// サーバーをポート番号8080で起動
 	e.Logger.Fatal(e.Start(":8080"))

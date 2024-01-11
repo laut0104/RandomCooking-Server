@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"os"
+	"strings"
 
 	usecase "github.com/laut0104/RandomCooking/usecase/interactor"
 	_ "github.com/lib/pq"
@@ -14,11 +15,17 @@ import (
 )
 
 type LineHandler struct {
-	lineUC *usecase.LineUseCase
+	userUC      *usecase.UserUseCase
+	lineUC      *usecase.LineUseCase
+	recommendUC *usecase.RecommendUseCase
 }
 
-func NewLineHandler(lineUC *usecase.LineUseCase) *LineHandler {
-	return &LineHandler{lineUC: lineUC}
+func NewLineHandler(userUC *usecase.UserUseCase, lineUC *usecase.LineUseCase, recommendUC *usecase.RecommendUseCase) *LineHandler {
+	return &LineHandler{
+		userUC:      userUC,
+		lineUC:      lineUC,
+		recommendUC: recommendUC,
+	}
 }
 
 func (h *LineHandler) LineEvent(c echo.Context) error {
@@ -45,20 +52,22 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 		// Follow
 		case linebot.EventTypeFollow:
 			message := "友達登録ありがとう！"
-			errmsg := "正常にユーザー登録できませんでした\nブロックし、もう一度友達登録をお願いします"
-			if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message)).Do(); err != nil {
-				if _, err = bot.PushMessage(event.Source.UserID, linebot.NewTextMessage(errmsg)).Do(); err != nil {
-					log.Print(err)
-				}
-				return err
-			}
-			if err := h.lineUC.Follow(event.Source.UserID, bot); err != nil {
+			errMsg := "正常にユーザー登録できませんでした\nブロックし、もう一度友達登録をお願いします"
+			if err := h.lineUC.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message)); err != nil {
 				log.Println(err)
-				if _, err = bot.PushMessage(event.Source.UserID, linebot.NewTextMessage(errmsg)).Do(); err != nil {
-					log.Print(err)
+				if err = h.lineUC.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(errMsg)); err != nil {
+					log.Println(err)
 				}
 				return err
 			}
+			if err := h.lineUC.Follow(event.Source.UserID); err != nil {
+				log.Println(err)
+				if err = h.lineUC.SendMessage(event.Source.UserID, linebot.NewTextMessage(errMsg)); err != nil {
+					log.Println(err)
+				}
+				return err
+			}
+
 			richMenu := &linebot.RichMenu{
 				Size:        linebot.RichMenuSize{Width: 2500, Height: 1686},
 				Selected:    false,
@@ -76,21 +85,22 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 						Bounds: linebot.RichMenuBounds{X: 1315, Y: 130, Width: 1054, Height: 1425},
 						Action: linebot.RichMenuAction{
 							Type: "message",
-							Text: "Hello1",
+							Text: "今日のメニュー何がいいかな？",
 						},
 					},
 				},
 			}
-			richMenuID, err := h.lineUC.CreateRichMenu(*richMenu, bot)
+
+			richMenuID, err := h.lineUC.CreateRichMenu(*richMenu)
 			if err != nil {
 				log.Println(err)
 				return err
 			}
-			if err = h.lineUC.SetRichMenuImage(bot, richMenuID, os.Getenv("RICHMENU_IMG")); err != nil {
+			if err = h.lineUC.SetRichMenuImage(richMenuID, os.Getenv("RICHMENU_IMG")); err != nil {
 				log.Println(err)
 				return err
 			}
-			if err = h.lineUC.SetDefaultRichMenu(bot, richMenuID); err != nil {
+			if err = h.lineUC.SetDefaultRichMenu(richMenuID); err != nil {
 				log.Println(err)
 				return err
 			}
@@ -104,56 +114,69 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 			}
 			log.Println("Delete user success =====")
 
+		case linebot.EventTypePostback:
+			replyToken := event.ReplyToken
+			userID := event.Source.UserID
+			postBackData := event.Postback.Data
+			recommendedMenuList := strings.Split(postBackData, ",")
+
+			user, err := h.userUC.GetUserByLineUserID(userID)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+
+			flexMessage, err := h.recommendUC.RecommendMenu(user.ID, recommendedMenuList)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+
+			if flexMessage == nil {
+				errMsg := "おすすめできるメニューがありません。メニューを登録してください。"
+				if err = h.lineUC.ReplyMessage(replyToken, linebot.NewTextMessage(errMsg)); err != nil {
+					log.Print(err)
+					return err
+				}
+				return nil
+			}
+
+			if err = h.lineUC.ReplyFlexMessage(replyToken, flexMessage); err != nil {
+				log.Println(err)
+				return err
+			}
 			// Text
-			// 	case linebot.EventTypeMessage:
-			// 		switch message := event.Message.(type) {
-			// 		case *linebot.TextMessage:
-			// 			// データベースの接続
-			// 			connStr := "user=root dbname=randomcooking password=password host=postgres sslmode=disable"
-			// 			db, err := sql.Open("postgres", connStr)
-			// 			if err != nil {
-			// 				log.Println(err)
-			// 				return nil
-			// 			}
+		case linebot.EventTypeMessage:
+			switch message := event.Message.(type) {
+			case *linebot.TextMessage:
+				if message.Text == "今日のメニュー何がいいかな？" {
+					replyToken := event.ReplyToken
+					userID := event.Source.UserID
 
-			// 			rows, err := db.Query(`SELECT * FROM users where lineuserId=$1`, event.Source.UserID)
-			// 			if err != nil {
-			// 				log.Println(err)
-			// 			}
-			// 			defer rows.Close()
+					var recommendedMenuList []string
 
-			// 			/*データベースに登録されていない場合*/
-			// 			if !rows.Next() {
-			// 				_, err := db.Exec(`INSERT INTO users (lineuserid, username) VALUES($1, $2)`, event.Source.UserID, message.Text)
-			// 				if err != nil {
-			// 					log.Println(err)
-			// 					return nil
-			// 				}
-			// 			} else {
-			// 				var id int
-			// 				var lineuserid string
-			// 				var username string
-			// 				rows.Scan(&id, &lineuserid, &username)
-			// 				/*メニューの登録*/
-			// 				_, err := db.Exec(`INSERT INTO menus (userid, menuname, recipes) VALUES($1, $2, '{"テスト/", "メニューです/"}')`, id, message.Text)
-			// 				if err != nil {
-			// 					log.Println(err)
-			// 					return nil
-			// 				}
-			// 			}
+					user, err := h.userUC.GetUserByLineUserID(userID)
+					if err != nil {
+						log.Println(err)
+						return err
+					}
 
-			// 			defer db.Close()
+					flexMessage, err := h.recommendUC.RecommendMenu(user.ID, recommendedMenuList)
+					if err != nil {
+						log.Println(err)
+						return err
+					}
 
-			// 			if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
-			// 				log.Print(err)
-			// 			}
-			// 		case *linebot.StickerMessage:
-			// 			replyMessage := fmt.Sprintf(
-			// 				"sticker id is %s, stickerResourceType is %s", message.StickerID, message.StickerResourceType)
-			// 			if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-			// 				log.Print(err)
-			// 			}
-			// 		}
+					if flexMessage == nil {
+						errMsg := "おすすめできるメニューがありません。メニューを登録してください。"
+						if err = h.lineUC.ReplyMessage(replyToken, linebot.NewTextMessage(errMsg)); err != nil {
+							log.Print(err)
+							return err
+						}
+						return nil
+					}
+				}
+			}
 		}
 	}
 	return c.NoContent(http.StatusOK)
