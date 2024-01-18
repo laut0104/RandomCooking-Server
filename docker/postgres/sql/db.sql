@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS menus(
     userid integer NOT NULL,
     menuname varchar(255) NOT NULL,
     imageurl varchar(255),
-    -- materials TEXT[] NOT NULL,
-    -- quantities TEXT[] NOT NULL,
+    ingredients TEXT[] NOT NULL,
+    quantities TEXT[] NOT NULL,
     recipes TEXT[] NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT menus_userid_fkey
