@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/line/line-bot-sdk-go/linebot"
 
@@ -13,7 +14,6 @@ import (
 	database "github.com/laut0104/RandomCooking/infra/postgresql/repository"
 	usecase "github.com/laut0104/RandomCooking/usecase/interactor"
 
-	"github.com/joho/godotenv"
 	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -29,6 +29,12 @@ func main() {
 
 	e.Use(middleware.CORS())
 
+	if os.Getenv("ENV") != "PROD" {
+		if err := godotenv.Load(".env.local"); err != nil {
+			log.Println(err)
+			log.Fatal(err)
+		}
+	}
 	if err := godotenv.Load(".env"); err != nil {
 		log.Println(err)
 		log.Fatal(err)
