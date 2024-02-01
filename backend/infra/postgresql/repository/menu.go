@@ -20,9 +20,9 @@ func NewMenuRepository(db *sql.DB) *MenuRepository {
 	return &MenuRepository{db: db}
 }
 
-func (r *MenuRepository) FindByID(id, userID string) (*entity.Menu, error) {
+func (r *MenuRepository) FindByID(id string) (*entity.Menu, error) {
 	var dto menuDTO
-	if err := r.db.QueryRow(`SELECT * FROM menus where id=$1 AND userid=$2`, id, userID).Scan(&dto.ID, &dto.UserID, &dto.MenuName, &dto.ImageUrl, pq.Array(&dto.Ingredients), pq.Array(&dto.Quantities), pq.Array(&dto.Recipes)); err != nil {
+	if err := r.db.QueryRow(`SELECT * FROM menus where id=$1`, id).Scan(&dto.ID, &dto.UserID, &dto.MenuName, &dto.ImageUrl, pq.Array(&dto.Ingredients), pq.Array(&dto.Quantities), pq.Array(&dto.Recipes)); err != nil {
 		log.Println(err)
 		return nil, err
 	}
@@ -53,6 +53,26 @@ func (r *MenuRepository) FindAllByUserID(userID string) ([]*entity.Menu, error) 
 	menus := []*entity.Menu{}
 	for rows.Next() {
 		// メモリ効率良くない？
+		dto := &entity.Menu{}
+		if err := rows.Scan(&dto.ID, &dto.UserID, &dto.MenuName, &dto.ImageUrl, pq.Array(&dto.Ingredients), pq.Array(&dto.Quantities), pq.Array(&dto.Recipes)); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		menus = append(menus, dto)
+	}
+	return menus, nil
+}
+
+func (r *MenuRepository) FindAllNotByUserID(userID string) ([]*entity.Menu, error) {
+	rows, err := r.db.Query(`SELECT * FROM menus where userid!=$1`, userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	menus := []*entity.Menu{}
+	for rows.Next() {
 		dto := &entity.Menu{}
 		if err := rows.Scan(&dto.ID, &dto.UserID, &dto.MenuName, &dto.ImageUrl, pq.Array(&dto.Ingredients), pq.Array(&dto.Quantities), pq.Array(&dto.Recipes)); err != nil {
 			log.Println(err)

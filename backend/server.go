@@ -59,10 +59,11 @@ func main() {
 	// TODO: ここら辺の生成周りは後でどっかでまとめたい
 	userRepo := database.NewUserRepository(db)
 	menuRepo := database.NewMenuRepository(db)
+	likeRepo := database.NewLikeRepository(db)
 
 	authUC := usecase.NewAuthUseCase()
 	userUC := usecase.NewUserUseCase(userRepo)
-	menuUC := usecase.NewMenuUseCase(menuRepo)
+	menuUC := usecase.NewMenuUseCase(menuRepo, likeRepo)
 	lineUC := usecase.NewLineUseCase(userRepo, bot)
 	recommendUC := usecase.NewRecommendUseCase(menuRepo)
 	storageUC := usecase.NewStorageUseCase()
@@ -81,13 +82,14 @@ func main() {
 	r.Use(echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY"))))
 	r.GET("/user/:id", userHandler.GetUserByID)
 	r.GET("/user", userHandler.GetUserByLineUserID)
-	r.GET("/menu/:uid/:id", menuHandler.GetMenu)
+	r.GET("/menu/:id", menuHandler.GetMenu)
 	r.GET("/menus/:uid", menuHandler.GetMenusByUserID)
 	r.POST("/menu/:uid", menuHandler.AddMenu)
 	r.PUT("/menu/:uid/:id", menuHandler.UpdateMenu)
 	r.DELETE("/menu/:uid/:id", menuHandler.DeleteMenu)
 	r.POST("/image/:uid", storageHandler.UploadImage)
 	r.POST("/recommend/menu/:uid", recommendHandler.RecommendMenu)
+	r.GET("/explore/menu/:uid", menuHandler.ExploreMenu)
 
 	// サーバーをポート番号8080で起動
 	e.Logger.Fatal(e.Start(":8080"))

@@ -25,10 +25,9 @@ func NewMenuHandler(menuUC *usecase.MenuUseCase) *MenuHandler {
 }
 
 func (h *MenuHandler) GetMenu(c echo.Context) error {
-	uid := c.Param("uid")
 	id := c.Param("id")
 
-	menu, err := h.menuUC.GetMenuByID(id, uid)
+	menu, err := h.menuUC.GetMenuByID(id)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -105,4 +104,16 @@ func (h *MenuHandler) DeleteMenu(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *MenuHandler) ExploreMenu(c echo.Context) error {
+	uid := c.Param("uid")
+
+	menus, err := h.menuUC.ExploreMenus(uid)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, menus)
 }
