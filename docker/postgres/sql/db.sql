@@ -22,3 +22,21 @@ CREATE TABLE IF NOT EXISTS menus(
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
+
+
+CREATE TABLE IF NOT EXISTS likes(
+    id serial NOT NULL, 
+    userid integer NOT NULL,
+    menuid integer NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT likes_userid_fkey
+    FOREIGN KEY (userid)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+    CONSTRAINT likes_menuid_fkey
+    FOREIGN KEY (menuid)
+    REFERENCES menus(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);

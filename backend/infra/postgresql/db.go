@@ -37,7 +37,5 @@ func New() (*sql.DB, error) {
 		return nil, err
 	}
 
-	log.Println(db)
-
 	return db, nil
 }
