@@ -3,12 +3,12 @@ package entity
 type (
 	Like struct {
 		ID     string `json:"id" param:"id"`
-		UserID int    `json:"userid" param:"uid"`
-		MenuID int    `json:"menuid" param:"menuid"`
+		UserID string `json:"userid" param:"uid"`
+		MenuID string `json:"menuid" param:"menuid"`
 	}
 )
 
-func NewLike(userID int, menuID int) *Like {
+func NewLike(userID string, menuID string) *Like {
 	return &Like{
 		UserID: userID,
 		MenuID: menuID,

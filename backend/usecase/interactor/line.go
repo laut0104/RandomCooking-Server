@@ -21,7 +21,6 @@ func NewLineUseCase(userRepo repository.User, lineBot *linebot.Client) *LineUseC
 }
 
 func (u *LineUseCase) Follow(lineUserID string) error {
-	log.Println("test==========")
 	profile, err := u.lineBot.GetProfile(lineUserID).Do()
 	if err != nil {
 		log.Println(err)

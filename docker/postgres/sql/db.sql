@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS likes(
     userid integer NOT NULL,
     menuid integer NOT NULL,
     PRIMARY KEY (id),
+    UNIQUE (userid, menuid),
     CONSTRAINT likes_userid_fkey
     FOREIGN KEY (userid)
     REFERENCES users(id)

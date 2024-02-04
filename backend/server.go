@@ -57,22 +57,24 @@ func main() {
 	}
 
 	// TODO: ここら辺の生成周りは後でどっかでまとめたい
-	userRepo := database.NewUserRepository(db)
-	menuRepo := database.NewMenuRepository(db)
 	likeRepo := database.NewLikeRepository(db)
+	menuRepo := database.NewMenuRepository(db)
+	userRepo := database.NewUserRepository(db)
 
 	authUC := usecase.NewAuthUseCase()
-	userUC := usecase.NewUserUseCase(userRepo)
-	menuUC := usecase.NewMenuUseCase(menuRepo, likeRepo)
+	likeUC := usecase.NewLikeUseCase(likeRepo)
 	lineUC := usecase.NewLineUseCase(userRepo, bot)
+	menuUC := usecase.NewMenuUseCase(menuRepo, likeRepo)
 	recommendUC := usecase.NewRecommendUseCase(menuRepo)
 	storageUC := usecase.NewStorageUseCase()
+	userUC := usecase.NewUserUseCase(userRepo)
 	authHandler := handler.NewAuthHandler(authUC)
-	userHandler := handler.NewUserHandler(userUC)
-	menuHandler := handler.NewMenuHandler(menuUC)
+	likeHandler := handler.NewLikeHandler(likeUC)
 	lineHandler := handler.NewLineHandler(userUC, lineUC, recommendUC)
-	storageHandler := handler.NewStorageHandler(storageUC)
+	menuHandler := handler.NewMenuHandler(menuUC)
 	recommendHandler := handler.NewRecommendHandler(userUC, recommendUC, lineUC)
+	storageHandler := handler.NewStorageHandler(storageUC)
+	userHandler := handler.NewUserHandler(userUC)
 
 	e.POST("/callback", lineHandler.LineEvent)
 	e.GET("/auth/line/callback", authHandler.Login)
@@ -90,6 +92,9 @@ func main() {
 	r.POST("/image/:uid", storageHandler.UploadImage)
 	r.POST("/recommend/menu/:uid", recommendHandler.RecommendMenu)
 	r.GET("/explore/menu/:uid", menuHandler.ExploreMenu)
+	r.GET("/like/:uid/:mid", likeHandler.GetMenuByUniqueKey)
+	r.POST("/like", likeHandler.AddLike)
+	r.DELETE("/like/:id", likeHandler.DeleteLike)
 
 	// サーバーをポート番号8080で起動
 	e.Logger.Fatal(e.Start(":8080"))

@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/laut0104/RandomCooking/domain/entity"
 	"github.com/laut0104/RandomCooking/domain/repository"
@@ -91,7 +90,7 @@ func (u *MenuUseCase) ExploreMenus(userID string) ([]*entity.Menu, error) {
 	menuLikesMap := make(map[string]struct{}, len(likes))
 
 	for _, like := range likes {
-		menuLikesMap[strconv.Itoa(like.MenuID)] = struct{}{}
+		menuLikesMap[like.MenuID] = struct{}{}
 	}
 	for _, menu := range menus {
 		if _, ok := menuLikesMap[menu.ID]; !ok {
