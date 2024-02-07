@@ -15,6 +15,22 @@ func NewLikeUseCase(likeRepo repository.Like) *LikeUseCase {
 	return &LikeUseCase{likeRepo: likeRepo}
 }
 
+type LikesMenu struct {
+	ID     string `json:"id" param:"id"`
+	UserID string `json:"userid" param:"uid"`
+	MenuID string `json:"menuid" param:"menuid"`
+}
+
+func (u *LikeUseCase) GetLikesMenuByUserID(userID string) ([]*repository.LikesMenu, error) {
+	likesMenu, err := u.likeRepo.FindLikesMenuByUserID(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return likesMenu, nil
+}
+
 func (u *LikeUseCase) GetLikeByUniqueKey(userID, menuID string) (*entity.Like, error) {
 	like, err := u.likeRepo.FindByUniqueKey(userID, menuID)
 	if err != nil {
