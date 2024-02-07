@@ -75,14 +75,21 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 				ChatBarText: "Tap here",
 				Areas: []linebot.AreaDetail{
 					{
-						Bounds: linebot.RichMenuBounds{X: 132, Y: 130, Width: 1054, Height: 1425},
+						Bounds: linebot.RichMenuBounds{X: 74, Y: 278, Width: 730, Height: 1130},
 						Action: linebot.RichMenuAction{
 							Type: "uri",
 							URI:  "https://liff.line.me/1660690567-wegZZboy/menu-list",
 						},
 					},
 					{
-						Bounds: linebot.RichMenuBounds{X: 1315, Y: 130, Width: 1054, Height: 1425},
+						Bounds: linebot.RichMenuBounds{X: 885, Y: 278, Width: 730, Height: 1130},
+						Action: linebot.RichMenuAction{
+							Type: "uri",
+							URI:  "https://liff.line.me/1660690567-wegZZboy/like-list",
+						},
+					},
+					{
+						Bounds: linebot.RichMenuBounds{X: 1695, Y: 278, Width: 730, Height: 1130},
 						Action: linebot.RichMenuAction{
 							Type: "message",
 							Text: "今日のメニュー何がいいかな？",
