@@ -19,16 +19,27 @@ func NewLikeHandler(likeUC *usecase.LikeUseCase) *LikeHandler {
 	return &LikeHandler{likeUC: likeUC}
 }
 
-func (h *LikeHandler) GetMenuByUniqueKey(c echo.Context) error {
+func (h *LikeHandler) GetLikesMenuByUserID(c echo.Context) error {
 	userID := c.Param("uid")
-	menuID := c.Param("mid")
-	menus, err := h.likeUC.GetLikeByUniqueKey(userID, menuID)
+	likesMenu, err := h.likeUC.GetLikesMenuByUserID(userID)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	return c.JSON(http.StatusOK, menus)
+	return c.JSON(http.StatusOK, likesMenu)
+}
+
+func (h *LikeHandler) GetLikeByUniqueKey(c echo.Context) error {
+	userID := c.Param("uid")
+	menuID := c.Param("mid")
+	like, err := h.likeUC.GetLikeByUniqueKey(userID, menuID)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return c.JSON(http.StatusOK, like)
 }
 
 func (h *LikeHandler) AddLike(c echo.Context) error {

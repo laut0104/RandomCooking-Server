@@ -7,6 +7,7 @@ import (
 
 	"github.com/laut0104/RandomCooking/domain/entity"
 	"github.com/laut0104/RandomCooking/domain/repository"
+	"github.com/lib/pq"
 )
 
 var _ repository.Like = &LikeRepository{}
@@ -51,6 +52,26 @@ func (r *LikeRepository) FindAllByUserID(userID string) ([]*entity.Like, error) 
 		likes = append(likes, dto)
 	}
 	return likes, nil
+}
+
+func (r *LikeRepository) FindLikesMenuByUserID(userID string) ([]*repository.LikesMenu, error) {
+	rows, err := r.db.Query(`SELECT likes.id, menus.id, menus.userid, menus.menuname, menus.imageurl, menus.ingredients, menus.quantities, menus.recipes FROM likes INNER JOIN menus ON likes.menuid = menus.id where likes.userid=$1`, userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	likesMenu := []*repository.LikesMenu{}
+	for rows.Next() {
+		likeMenu := &repository.LikesMenu{}
+		if err := rows.Scan(&likeMenu.ID, &likeMenu.MenuID, &likeMenu.UserID, &likeMenu.MenuName, &likeMenu.ImageUrl, pq.Array(&likeMenu.Ingredients), pq.Array(&likeMenu.Quantities), pq.Array(&likeMenu.Recipes)); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		likesMenu = append(likesMenu, likeMenu)
+	}
+	return likesMenu, nil
 }
 
 func (r *LikeRepository) Store(like *entity.Like) error {

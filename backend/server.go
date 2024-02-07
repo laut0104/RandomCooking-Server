@@ -92,7 +92,8 @@ func main() {
 	r.POST("/image/:uid", storageHandler.UploadImage)
 	r.POST("/recommend/menu/:uid", recommendHandler.RecommendMenu)
 	r.GET("/explore/menu/:uid", menuHandler.ExploreMenu)
-	r.GET("/like/:uid/:mid", likeHandler.GetMenuByUniqueKey)
+	r.GET("/likes/:uid", likeHandler.GetLikesMenuByUserID)
+	r.GET("/like/:uid/:mid", likeHandler.GetLikeByUniqueKey)
 	r.POST("/like", likeHandler.AddLike)
 	r.DELETE("/like/:id", likeHandler.DeleteLike)
 
