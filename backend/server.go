@@ -65,7 +65,7 @@ func main() {
 	likeUC := usecase.NewLikeUseCase(likeRepo)
 	lineUC := usecase.NewLineUseCase(userRepo, bot)
 	menuUC := usecase.NewMenuUseCase(menuRepo, likeRepo)
-	recommendUC := usecase.NewRecommendUseCase(menuRepo)
+	recommendUC := usecase.NewRecommendUseCase(menuRepo, likeRepo)
 	storageUC := usecase.NewStorageUseCase()
 	userUC := usecase.NewUserUseCase(userRepo)
 	authHandler := handler.NewAuthHandler(authUC)

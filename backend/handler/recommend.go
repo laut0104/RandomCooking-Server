@@ -29,7 +29,7 @@ func (h *RecommendHandler) RecommendMenu(c echo.Context) error {
 	uid := c.Param("uid")
 
 	var recommendedList []string
-	flexMessage, err := h.recommendUC.RecommendMenu(uid, recommendedList)
+	flexMessage, err := h.recommendUC.RecommendMyMenu(uid, recommendedList)
 	if err != nil {
 		log.Println(err)
 		return err

@@ -125,7 +125,8 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 			replyToken := event.ReplyToken
 			userID := event.Source.UserID
 			postBackData := event.Postback.Data
-			recommendedMenuList := strings.Split(postBackData, ",")
+			postBackDataList := strings.Split(postBackData, ",")
+			recommendedMenuList := postBackDataList[1:]
 
 			user, err := h.userUC.GetUserByLineUserID(userID)
 			if err != nil {
@@ -133,10 +134,19 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 				return err
 			}
 
-			flexMessage, err := h.recommendUC.RecommendMenu(user.ID, recommendedMenuList)
-			if err != nil {
-				log.Println(err)
-				return err
+			var flexMessage *linebot.FlexMessage
+			if postBackDataList[0] == "MyMenu" {
+				flexMessage, err = h.recommendUC.RecommendMyMenu(user.ID, recommendedMenuList)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+			} else if postBackDataList[0] == "MyMenuAndLikeMenu" {
+				flexMessage, err = h.recommendUC.RecommendMyMenuAndLikeMenu(user.ID, recommendedMenuList)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
 			}
 
 			if flexMessage == nil {
@@ -156,8 +166,77 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 		case linebot.EventTypeMessage:
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
+				replyToken := event.ReplyToken
 				if message.Text == "今日のメニュー何がいいかな？" {
-					replyToken := event.ReplyToken
+					json := `{
+						"type": "bubble",
+						"size": "giga",
+						"body": {
+							"type": "box",
+							"layout": "vertical",
+							"contents": [
+								{
+									"type": "text",
+									"text": "今日のメニューは何から選ぶ？",
+									"size": "md",
+									"adjustMode": "shrink-to-fit",
+									"align": "center"
+								}
+							]
+						},
+						"footer": {
+							"type": "box",
+							"layout": "vertical",
+							"spacing": "sm",
+							"contents": [
+								{
+									"type": "box",
+									"layout": "horizontal",
+									"contents": [
+										{
+											"type": "button",
+											"style": "link",
+											"height": "sm",
+											"action": {
+												"type": "message",
+												"label": "自分のメニューのみ",
+												"text": "自分のメニューのみ"
+											},
+											"color": "#000000"
+										},
+										{
+											"type": "button",
+											"style": "link",
+											"height": "sm",
+											"action": {
+												"type": "message",
+												"label": "お気に入りも含む",
+												"text": "お気に入りも含む"
+											},
+											"color": "#000000"
+										}
+									],
+									"spacing": "sm"
+								}
+							]
+						}
+					}`
+					jsonData := []byte(json)
+					container, err := linebot.UnmarshalFlexMessageJSON(jsonData)
+					if err != nil {
+						log.Println("error")
+						log.Println(err)
+						return err
+					}
+					flexMessage := linebot.NewFlexMessage("alt text", container)
+
+					if err = h.lineUC.ReplyFlexMessage(replyToken, flexMessage); err != nil {
+						log.Println(err)
+						return err
+					}
+
+				} else if message.Text == "自分のメニューのみ" {
+					// TODO: Context的なので持たせるか何かで今いる情報によって分岐させたい
 					userID := event.Source.UserID
 
 					var recommendedMenuList []string
@@ -168,7 +247,7 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 						return err
 					}
 
-					flexMessage, err := h.recommendUC.RecommendMenu(user.ID, recommendedMenuList)
+					flexMessage, err := h.recommendUC.RecommendMyMenu(user.ID, recommendedMenuList)
 					if err != nil {
 						log.Println(err)
 						return err
@@ -182,6 +261,40 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 						}
 						return nil
 					}
+					if err = h.lineUC.ReplyFlexMessage(replyToken, flexMessage); err != nil {
+						log.Println(err)
+						return err
+					}
+
+				} else if message.Text == "お気に入りも含む" {
+					userID := event.Source.UserID
+
+					var recommendedMenuList []string
+
+					user, err := h.userUC.GetUserByLineUserID(userID)
+					if err != nil {
+						log.Println(err)
+						return err
+					}
+
+					flexMessage, err := h.recommendUC.RecommendMyMenuAndLikeMenu(user.ID, recommendedMenuList)
+					if err != nil {
+						log.Println(err)
+						return err
+					}
+					if flexMessage == nil {
+						errMsg := "おすすめできるメニューがありません。メニューを登録してください。"
+						if err = h.lineUC.ReplyMessage(replyToken, linebot.NewTextMessage(errMsg)); err != nil {
+							log.Print(err)
+							return err
+						}
+						return nil
+					}
+					if err = h.lineUC.ReplyFlexMessage(replyToken, flexMessage); err != nil {
+						log.Println(err)
+						return err
+					}
+
 				}
 			}
 		}

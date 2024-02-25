@@ -12,13 +12,14 @@ import (
 
 type RecommendUseCase struct {
 	menuRepo repository.Menu
+	likeRepo repository.Like
 }
 
-func NewRecommendUseCase(menuRepo repository.Menu) *RecommendUseCase {
-	return &RecommendUseCase{menuRepo: menuRepo}
+func NewRecommendUseCase(menuRepo repository.Menu, likeRepo repository.Like) *RecommendUseCase {
+	return &RecommendUseCase{menuRepo: menuRepo, likeRepo: likeRepo}
 }
 
-func (u *RecommendUseCase) RecommendMenu(userID string, recommendedList []string) (*linebot.FlexMessage, error) {
+func (u *RecommendUseCase) RecommendMyMenu(userID string, recommendedList []string) (*linebot.FlexMessage, error) {
 	menus, err := u.menuRepo.FindAllByUserID(userID)
 	if err != nil {
 		log.Println(err)
@@ -100,7 +101,147 @@ func (u *RecommendUseCase) RecommendMenu(userID string, recommendedList []string
 							"action": {
 								"type": "postback",
 								"label": "他のは？",
-								"data": "` + recommendedMenu + `"
+								"data": "MyMenu,` + recommendedMenu + `"
+							},
+							"flex": 1,
+							"style": "secondary",
+							"margin": "md",
+							"gravity": "center"
+						},
+						{
+							"type": "separator",
+							"color": "#FFFFFF",
+							"margin": "10px"
+						},
+						{
+							"type": "button",
+							"action": {
+								"type": "uri",
+								"label": "詳細を見る",
+								"uri": "` + link + `"
+							},
+							"flex": 1,
+							"style": "secondary",
+							"margin": "none",
+							"gravity": "center"
+						}
+					],
+					"height": "60px"
+				}
+			]
+		}
+	}`
+	jsonData := []byte(json)
+	container, err := linebot.UnmarshalFlexMessageJSON(jsonData)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	flexMessage := linebot.NewFlexMessage("alt text", container)
+
+	return flexMessage, nil
+}
+
+func (u *RecommendUseCase) RecommendMyMenuAndLikeMenu(userID string, recommendedList []string) (*linebot.FlexMessage, error) {
+	menus, err := u.menuRepo.FindAllByUserID(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	likes, err := u.likeRepo.FindLikesMenuByUserID(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	recommendMenuMap := make(map[string]struct{}, len(menus)+len(likes))
+	recommendedMenu := ""
+	for _, menuID := range recommendedList {
+		recommendMenuMap[menuID] = struct{}{}
+		recommendedMenu = recommendedMenu + menuID + ","
+	}
+	menuList := make([]*entity.Menu, 0, len(menus)+len(likes))
+	for _, menu := range menus {
+		if _, ok := recommendMenuMap[menu.ID]; !ok {
+			menuList = append(menuList, menu)
+		}
+	}
+	for _, like := range likes {
+		if _, ok := recommendMenuMap[like.MenuID]; !ok {
+			menu := &entity.Menu{
+				ID:          like.MenuID,
+				MenuName:    like.MenuName,
+				ImageUrl:    like.ImageUrl,
+				Ingredients: like.Ingredients,
+				Quantities:  like.Quantities,
+				Recipes:     like.Recipes,
+			}
+			menuList = append(menuList, menu)
+		}
+	}
+	log.Println(menuList)
+	if len(menuList) == 0 {
+		return nil, nil
+	}
+	rand.NewSource(time.Now().UnixNano())
+	rnd := rand.Intn(len(menuList))
+
+	link := "https://liff.line.me/1660690567-wegZZboy/menu/" + menuList[rnd].ID
+	recommendedMenu = recommendedMenu + menuList[rnd].ID
+
+	json := `{
+		"type": "bubble",
+		"header": {
+			"type": "box",
+			"layout": "vertical",
+			"contents": [
+				{
+					"type": "text",
+					"text": "今日のメニュー",
+					"size": "xl",
+					"margin": "none",
+					"style": "normal",
+					"align": "center"
+				}
+			],
+			"spacing": "none",
+			"margin": "none",
+			"height": "60px"
+		},
+		"body": {
+			"type": "box",
+			"layout": "vertical",
+			"contents": [
+				{
+					"type": "text",
+					"weight": "bold",
+					"size": "xl",
+					"text": "` + menuList[rnd].MenuName +
+		`"}`
+	if menuList[rnd].ImageUrl != "" {
+		imageBody := `,{
+			"type": "image",
+			"url": "` + menuList[rnd].ImageUrl + `",
+			"size": "full"
+		}`
+		json = json + imageBody
+	}
+	json = json +
+		`]
+		},
+		"footer": {
+			"type": "box",
+			"layout": "vertical",
+			"contents": [
+				{
+					"type": "box",
+					"layout": "horizontal",
+					"contents": [
+						{
+							"type": "button",
+							"action": {
+								"type": "postback",
+								"label": "他のは？",
+								"data": "MyMenuAndLikeMenu,` + recommendedMenu + `"
 							},
 							"flex": 1,
 							"style": "secondary",
