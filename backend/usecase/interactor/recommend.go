@@ -3,6 +3,7 @@ package usecase
 import (
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/laut0104/RandomCooking/domain/entity"
@@ -45,7 +46,7 @@ func (u *RecommendUseCase) RecommendMyMenu(userID string, recommendedList []stri
 	rand.NewSource(time.Now().UnixNano())
 	rnd := rand.Intn(len(menuList))
 
-	link := "https://liff.line.me/1660690567-wegZZboy/menu/" + menuList[rnd].ID
+	link := os.Getenv("LIFF_URL") + "/menu/" + menuList[rnd].ID
 	recommendedMenu = recommendedMenu + menuList[rnd].ID
 
 	json := `{
@@ -185,7 +186,7 @@ func (u *RecommendUseCase) RecommendMyMenuAndLikeMenu(userID string, recommended
 	rand.NewSource(time.Now().UnixNano())
 	rnd := rand.Intn(len(menuList))
 
-	link := "https://liff.line.me/1660690567-wegZZboy/menu/" + menuList[rnd].ID
+	link := os.Getenv("LIFF_URL") + "/menu/" + menuList[rnd].ID
 	recommendedMenu = recommendedMenu + menuList[rnd].ID
 
 	json := `{

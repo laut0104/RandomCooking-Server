@@ -19,7 +19,6 @@ RUN apk --no-cache add libc6-compat
 # コピー元のビルダーイメージの/app/serverをコピー
 COPY --from=builder /app/server /app/
 COPY --from=builder /app/img/ /app/img/
-COPY --from=builder /app/.env /app/
 COPY --from=builder /app/.env.local /app/
 COPY --from=builder /app/credentials.json /app/
 

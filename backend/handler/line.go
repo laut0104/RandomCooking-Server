@@ -78,14 +78,14 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 						Bounds: linebot.RichMenuBounds{X: 74, Y: 278, Width: 730, Height: 1130},
 						Action: linebot.RichMenuAction{
 							Type: "uri",
-							URI:  "https://liff.line.me/1660690567-wegZZboy/menu-list",
+							URI:  os.Getenv("LIFF_URL") + "/menu-list",
 						},
 					},
 					{
 						Bounds: linebot.RichMenuBounds{X: 885, Y: 278, Width: 730, Height: 1130},
 						Action: linebot.RichMenuAction{
 							Type: "uri",
-							URI:  "https://liff.line.me/1660690567-wegZZboy/like-list",
+							URI:  os.Getenv("LIFF_URL") + "/like-list",
 						},
 					},
 					{
