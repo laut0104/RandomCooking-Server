@@ -35,10 +35,10 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(err)
-		log.Fatal(err)
-	}
+	// if err := godotenv.Load(".env"); err != nil {
+	// 	log.Println(err)
+	// 	log.Fatal(err)
+	// }
 
 	db, err := postgresql.New()
 	if err != nil {
