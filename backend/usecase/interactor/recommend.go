@@ -76,8 +76,9 @@ func (u *RecommendUseCase) RecommendMyMenu(userID string, recommendedList []stri
 					"type": "text",
 					"weight": "bold",
 					"size": "xl",
-					"text": "` + menuList[rnd].MenuName +
-		`"}`
+					"text": "` + menuList[rnd].MenuName + `",
+					"wrap": true
+					}`
 	if menuList[rnd].ImageUrl != "" {
 		imageBody := `,{
 			"type": "image",
@@ -138,7 +139,7 @@ func (u *RecommendUseCase) RecommendMyMenu(userID string, recommendedList []stri
 		log.Println(err)
 		return nil, err
 	}
-	flexMessage := linebot.NewFlexMessage("alt text", container)
+	flexMessage := linebot.NewFlexMessage("このメニューはどうですか？", container)
 
 	return flexMessage, nil
 }
@@ -216,8 +217,9 @@ func (u *RecommendUseCase) RecommendMyMenuAndLikeMenu(userID string, recommended
 					"type": "text",
 					"weight": "bold",
 					"size": "xl",
-					"text": "` + menuList[rnd].MenuName +
-		`"}`
+					"text": "` + menuList[rnd].MenuName + `",
+					"wrap": true
+					}`
 	if menuList[rnd].ImageUrl != "" {
 		imageBody := `,{
 			"type": "image",
@@ -278,7 +280,7 @@ func (u *RecommendUseCase) RecommendMyMenuAndLikeMenu(userID string, recommended
 		log.Println(err)
 		return nil, err
 	}
-	flexMessage := linebot.NewFlexMessage("alt text", container)
+	flexMessage := linebot.NewFlexMessage("このメニューはどうですか？", container)
 
 	return flexMessage, nil
 }
