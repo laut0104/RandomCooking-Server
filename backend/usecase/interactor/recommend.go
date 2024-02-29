@@ -103,7 +103,8 @@ func (u *RecommendUseCase) RecommendMyMenu(userID string, recommendedList []stri
 							"action": {
 								"type": "postback",
 								"label": "他のは？",
-								"data": "MyMenu,` + recommendedMenu + `"
+								"data": "MyMenu,` + recommendedMenu + `",
+								"displayText": "他のは？"
 							},
 							"flex": 1,
 							"style": "secondary",
@@ -244,7 +245,8 @@ func (u *RecommendUseCase) RecommendMyMenuAndLikeMenu(userID string, recommended
 							"action": {
 								"type": "postback",
 								"label": "他のは？",
-								"data": "MyMenuAndLikeMenu,` + recommendedMenu + `"
+								"data": "MyMenuAndLikeMenu,` + recommendedMenu + `",
+								"displayText": "他のは？"
 							},
 							"flex": 1,
 							"style": "secondary",
