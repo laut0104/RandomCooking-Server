@@ -150,7 +150,10 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 			}
 
 			if flexMessage == nil {
-				errMsg := "おすすめできるメニューがありません。メニューを登録してください。"
+				errMsg := "他におすすめできるメニューがありません。メニューを登録してください。"
+				if postBackDataList[0] == "MyMenuAndLikeMenu" {
+					errMsg = "他におすすめできるメニューがありません。メニューの登録、もしくはみんなのレシピをお気に入り登録してください。"
+				}
 				if err = h.lineUC.ReplyMessage(replyToken, linebot.NewTextMessage(errMsg)); err != nil {
 					log.Print(err)
 					return err
@@ -283,7 +286,7 @@ func (h *LineHandler) LineEvent(c echo.Context) error {
 						return err
 					}
 					if flexMessage == nil {
-						errMsg := "おすすめできるメニューがありません。メニューを登録してください。"
+						errMsg := "おすすめできるメニューがありません。メニューの登録、もしくはみんなのレシピをお気に入り登録してください。"
 						if err = h.lineUC.ReplyMessage(replyToken, linebot.NewTextMessage(errMsg)); err != nil {
 							log.Print(err)
 							return err
